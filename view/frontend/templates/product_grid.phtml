@@ -1,0 +1,103 @@
+<?php /* @var Sale $block */ ?>
+<?php
+
+use Magento\Catalog\Block\Product\ReviewRendererInterface;
+use Younify\ProductCollections\Block\Sale;
+
+$templateTypeSelected = $block->getData('type');
+if ($templateTypeSelected == "sale") {
+    $_productCollection = $block->getSaleProducts()->setPageSize(3);
+} elseif ($templateTypeSelected == "new") {
+    $_productCollection = $block->getNewProducts()->setPageSize(3);
+} elseif ($templateTypeSelected == "bestseller") {
+    $_productCollection = $block->getBestsellerProducts()->setPageSize(3);
+}
+$_helper = $this->helper(Magento\Catalog\Helper\Output::class);
+?>
+<?php if (!$_productCollection->count()) : ?>
+    <div class="message info empty">
+        <div><?= $block->escapeHtml(__('We can\'t find products matching the selection.')) ?></div>
+    </div>
+<?php else : ?>
+    <?php
+    $viewMode = 'grid';
+    $imageDisplayArea = 'product_category_grid';
+    $showWishlist = false;
+    $showCompare = false;
+    $showCart = false;
+    $templateType = ReviewRendererInterface::SHORT_VIEW;
+    $showDescription = false;
+    ?>
+    <div class="products wrapper <?= /* @noEscape */
+    $viewMode ?> products-<?= /* @noEscape */
+    $viewMode ?>">
+        <ol class="products items product-items ">
+            <?php $iterator = 1; ?>
+            <?php foreach ($_productCollection as $_product) : ?>
+                <?= /* @noEscape */
+                ($iterator++ == 1) ? '<li class="product-item">' : '</li> <li class="product-item">' ?>
+                <?php $postDataHelper = $this->helper('Magento\Framework\Data\Helper\PostHelper');
+                $postData = $postDataHelper->getPostData($block->getAddToCartUrl($_product), ['product' => $_product->getEntityId()]); ?>
+                <div class="product-item-content" data-container="product-<?= /* @noEscape */
+                $viewMode ?>">
+                    <a class="product photo product-item-photo"
+                        <?php $productImage = $block->getImage($_product, $imageDisplayArea); ?>
+                       href="<?= $block->escapeUrl($_product->getImageUrl()) ?>"
+                       tabindex="-1">
+                        <?= $productImage->toHtml(); ?>
+                    </a>
+                    <div class="product details product-item-details">
+                        <strong class="product name product-item-name">
+                            <a class="product-item-link"
+                               href="<?= $block->escapeUrl($_product->getProductUrl()) ?>">
+                                <?= /* @noEscape */
+                                $_helper->productAttribute($_product, $_product->getName(), 'name') ?>
+                            </a>
+                            <div class="in-out-stock">
+                                <?php if ($_product->isAvailable()) : ?>
+                                    <div class="stock available"><span><?= $block->escapeHtml(__('In stock')) ?></span>
+                                    </div>
+                                <?php else : ?>
+                                    <div class="stock unavailable">
+                                        <span><?= $block->escapeHtml(__('Out of stock')) ?></span></div>
+                                <?php endif; ?>
+                            </div>
+                        </strong>
+                        <?= /* @noEscape */
+                        $block->getProductPrice($_product) ?>
+                        <div class="product-button-section product-item-actions">
+                            <div class="actions-primary">
+                                <?php if ($_product->isSaleable()) : ?>
+                                    <?php $postParams = $block->getAddToCartPostParams($_product); ?>
+                                    <form data-role="tocart-form"
+                                          data-product-sku="<?= $block->escapeHtml($_product->getSku()) ?>"
+                                          action="<?= $block->escapeUrl($postParams['action']) ?>"
+                                          method="post">
+                                        <input type="hidden"
+                                               name="product"
+                                               value="<?= /* @noEscape */
+                                               $postParams['data']['product'] ?>">
+                                        <input type="hidden" name="uenc"
+                                               value="<?= /* @noEscape */
+                                               $postParams['data']['uenc'] ?>">
+                                        <?= $block->getBlockHtml('formkey') ?>
+                                        <button class="seller-btn action tocart primary"
+                                                data-post='<?php /* @escapeNotVerified */
+                                                echo $postData; ?>'
+                                                type="button"
+                                                title="<?php /* @escapeNotVerified */
+                                                echo('Add to Cart') ?>">
+                                            <span><?php /* @escapeNotVerified */
+                                                echo('Add to Cart') ?></span>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </li>
+            <?php endforeach; ?>
+        </ol>
+    </div>
+<?php endif; ?>

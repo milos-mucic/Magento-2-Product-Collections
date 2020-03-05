@@ -1,0 +1,132 @@
+<?php
+    use Younify\ProductCollections\Block\Sale;
+    use Magento\Framework\App\Action\Action;
+?>
+<?php if ($exist = ($block->getDailyDealsProducts() && $block->getDailyDealsProducts()->getSize())): ?>
+<?php
+    $productsNumber = 2;
+    $receivedProductsNumber = $block->getData('products_count');
+    $helper = $this->helper('Younify\ProductCollections\Helper\Times');
+
+    if($receivedProductsNumber && is_numeric($receivedProductsNumber)){
+        $productsNumber = (int)$receivedProductsNumber;
+    }
+    $image = 'new_products_content_widget_grid';
+    /*TO DO: FILTER SHOULD BE REMOVED WHEN FILTER IN BLOCK IS FINISHED*/
+    $items = $block->getDailyDealsProducts()
+        ->setPageSize($productsNumber);
+    $templateType = \Magento\Catalog\Block\Product\ReviewRendererInterface::SHORT_VIEW;
+    ?>
+<div class="daily-deals-container">
+    <div class="daily-deals-wrapper<?= $productsNumber > 2 ? ' f-width">': '">' ?> 
+        <div class=" block-products-list daily-deals-block">
+        <ol class="product-items">
+            <?php $iterator = 1; ?>
+            <?php foreach ($items as $_item): ?>
+            <?php
+                $productId=$_item->getData('entity_id');
+                $specialPriceToDate = $_item->getData('special_to_date');
+            ?>
+            <?php  $postDataHelper = $this->helper('Magento\Framework\Data\Helper\PostHelper');
+    $postData = $postDataHelper->getPostData($block->getAddToCartUrl($_item), ['product' => $_item->getEntityId()]); ?>           
+        <?= /* @noEscape */ ($iterator++ == 1) ? '<li class="product-item">' : '</li><li class="product-item">' ?>
+            <div class="icons-container">
+                <a href="<?= $block->escapeUrl($block->getProductUrl($_item)) ?>">
+                    <span class="icon-search"></span>
+                </a>
+                <a href="#" data-post='<?= /* @noEscape */ $block->getAddToWishlistParams($_item) ?>' class="action"
+                    data-action="add-to-wishlist" title="<?= $block->escapeHtmlAttr(__('Add to Wish List')) ?>">
+                    <span class="icon-heart"></span>
+                </a>
+            </div>
+            <?php
+                        $productLabel = $_item->getData('product_label');
+                        if ($productLabel) {
+                            echo '<div class="product-label ' . $productLabel . '">' . $productLabel . '</div>';
+                        }
+                    ?>
+            <a href="<?= $block->escapeUrl($block->getProductUrl($_item)) ?>" class="product-item-photo">
+                <?= $block->getImage($_item, $image)->toHtml() ?>
+            </a>
+            <div id="counter-<?= $productId; ?>" class="countdown-wrapper" data-bind="scope: 'counters-<?= $productId; ?>'">
+                <!-- ko template: getTemplate() -->
+                <!-- /ko -->
+            </div>
+
+            <div class="product details product-item-details">
+                <div class="name-desc-price-wrapper">
+                    <a class="product-item-name" title="<?= $block->escapeHtml($_item->getName()) ?>"
+                        href="<?= $block->escapeUrl($block->getProductUrl($_item)) ?>" class="product-item-link">
+                        <?= $block->escapeHtml($_item->getName()) ?>
+                    </a>
+
+                    <div class="short-description">
+                        <?= $_item->getData('short_description') ?>
+                    </div>
+
+                    <?= /* @noEscape */ $block->getProductPrice($_item) ?>
+                    <?= $block->getProductDetailsHtml($_item) ?>
+
+
+                </div>
+                <div class="actions-primary">
+                    <?php if ($_item->isSaleable()) : ?>
+                    <?php $postParams = $block->getAddToCartPostParams($_item); ?>
+
+
+                    <form data-role="tocart-form" data-product-sku="<?= $block->escapeHtml($_item->getSku()) ?>"
+                        action="<?= /* @NoEscape */ $postParams['action'] ?>" method="post">
+                        <input type="hidden" name="product"
+                            value="<?= /* @escapeNotVerified */ $postParams['data']['product'] ?>">
+                        <input type="hidden" name="<?= /* @noEscape */ Action::PARAM_NAME_URL_ENCODED ?>"
+                            value="<?= /* @noEscape */ $postParams['data'][Action::PARAM_NAME_URL_ENCODED] ?>">
+                        <?= $block->getBlockHtml('formkey') ?>
+                        <button class="action tocart primary addtocart"
+                            data-post='<?php /* @escapeNotVerified */ echo $postData; ?>' type="button"
+                            title="<?php /* @escapeNotVerified */ echo __('Add to Cart') ?>">
+                            <span><?php /* @escapeNotVerified */ echo __('Add to Cart') ?></span>
+                        </button>
+                    </form>
+                    <?php else : ?>
+                    <?php if ($_item->getIsSalable()) : ?>
+                    <div class="stock available"><span><?= $block->escapeHtml(__('In stock')) ?></span></div>
+                    <?php else : ?>
+                    <div class="stock unavailable"><span><?= $block->escapeHtml(__('Out of stock')) ?></span></div>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+
+                <?= $block->getProductDetailsHtml($_item) ?>
+            </div>
+            <?= ($iterator == count($items) + 1) ? '</li>' : '' ?>
+            <script type="text/x-magento-init">
+            {
+                "#counter-<?= $productId; ?>": {
+                    "Magento_Ui/js/core/app": {
+                        "components": {
+                            "counters-<?= $productId; ?>": {
+                                "component": "Younify_ProductCollections/js/kocounter",
+                                   "template": "Younify_ProductCollections/counter",
+                                  "date_to": "<?= $specialPriceToDate; ?>",
+                                "config_time_zone": "<?= $helper->getConfigTimezone() ?>"
+                            }
+                        }
+                    }
+                }
+            }
+           </script>
+            <?php endforeach ?>
+        </ol>
+    </div>
+    </div>
+    <!-- Daily deals banner cms block -->
+    <?php
+        if($productsNumber<=2){
+            echo $this->getLayout()
+                ->createBlock('Magento\Cms\Block\Block')
+                ->setBlockId('homepage_daily_deals_banner')
+                ->toHtml();
+        }    
+    ?>
+</div> <!-- end of .daily-deals-container -->
+<?php endif;?>

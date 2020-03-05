@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<widgets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:ProductCollections:Magento_Widget:etc/widget.xsd">
+    <widget class="Younify\ProductCollections\Block\Widget\Sales" id="sales">
+        <label>Sales Widget</label>
+        <description>Products on sale</description>
+        <parameters>
+            <parameter name="saleWidget" sort_order="10" visible="true" xsi:type="text">
+                <label>Custom Posts Label</label>
+            </parameter>
+        </parameters>
+    </widget>
+</widgets>

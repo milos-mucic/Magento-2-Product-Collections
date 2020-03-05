@@ -1,0 +1,111 @@
+<?php /* @var Sale $block */ ?>
+<?php
+
+use Magento\Catalog\Block\Product\ReviewRendererInterface;
+use Magento\Catalog\Model\Product;
+use Younify\ProductCollections\Block\Sale;
+
+$templateTypeSelected = $block->getData('type');
+if ($templateTypeSelected == "featured") {
+    $_productCollection = $block->getFeaturedProducts();
+} elseif ($templateTypeSelected == "bestseller") {
+    $_productCollection = $block->getBestsellerProducts();
+} elseif ($templateTypeSelected == "new") {
+    $_productCollection = $block->getNewProducts();
+}
+$_helper = $this->helper(Magento\Catalog\Helper\Output::class);
+?>
+<?php if (!$_productCollection->count()) : ?>
+    <div class="message info empty">
+        <div><?= $block->escapeHtml(__('We can\'t find products matching the selection.')) ?></div>
+    </div>
+<?php else : ?>
+    <?php
+    $viewMode = 'grid';
+    $type = 'widget-product-grid';
+    $mode = 'grid';
+    $imageDisplay = 'new_products_content_widget_grid';
+    $showDescription = false;
+    $templateType = ReviewRendererInterface::SHORT_VIEW;
+    ?>
+    <div class="products wrapper <?= /* @noEscape */
+    $viewMode ?> products-<?= /* @noEscape */
+    $viewMode ?>">
+        <ol class="products list items product-items">
+            <?php /** @var $_product Product */ ?>
+            <?= /* @noEscape */
+            '<!-- ' . $imageDisplay . '-->' ?>
+            <div class="products-<?= /* @noEscape */
+            $mode ?> <?= /* @noEscape */
+            $mode ?> products list">
+                <ol class="product-items <?= /* @noEscape */
+                $type ?>">
+                    <?php $iterator = 1; ?>
+                    <?php foreach ($_productCollection as $_item): ?>
+                        <?= /* @noEscape */
+                        ($iterator++ == 1) ? '<li class="product-item">' : '</li><li class="product-item">' ?>
+                        <div class="product-item-info" data-container="product-<?= /* @noEscape */
+                        $viewMode ?>">
+                            <a href="<?= $block->escapeUrl($block->getProductUrl($_item)) ?>"
+                               class="product-item-photo">
+                                <?= $block->getImage($_item, $imageDisplay)->toHtml() ?>
+                            </a>
+                            <div class="product details product-item-details">
+                                <?php
+                                $_productNameStripped = $block->stripTags($_item->getName(), null, true);
+                                ?>
+                                <strong class="product name product-item-name">
+                                    <a class="product-item-link"
+                                       href="<?= $block->escapeUrl($_item->getProductUrl()) ?>">
+                                        <?= /* @noEscape */
+                                        $_helper->productAttribute($_item, $_item->getName(), 'name') ?>
+                                    </a>
+                                </strong>
+                                <?= /* @noEscape */
+                                $block->getProductPrice($_item) ?>
+                                <?= $block->getProductDetailsHtml($_item) ?>
+                                <div class="product-item-inner no-box-shadow">
+                                    <div class="product-item-actions">
+                                        <a class="view-product-link action primary more-info-button"
+                                           data-title="echo __('More informations'); ?>"
+                                           href="<?php echo $_item->getProductUrl(); ?>"><span><?php echo __('More informations'); ?></span></a>
+                                    </div>
+                                    <?php if ($showDescription) : ?>
+                                        <div class="product description product-item-description">
+                                            <?= /* @noEscape */
+                                            $_helper->productAttribute($_item, $_item->getShortDescription(), 'short_description') ?>
+                                            <a href="<?= $block->escapeUrl($_item->getProductUrl()) ?>"
+                                               title="<?= /* @noEscape */
+                                               $_productNameStripped ?>"
+                                               class="action more"><?= $block->escapeHtml(__('Learn More')) ?></a>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        </li>
+                    <?php endforeach; ?>
+                </ol>
+            </div>
+        </ol>
+    </div>
+<?php endif; ?>
+<script>
+    require(["jquery", "mage/backend/tabs", "jquery/ui"], function ($) {
+        $(function () {
+            $('#tab_element').tabs({
+                active: 'tab1_content',  // active tab elemtn id
+                destination: '#tab_element_content', // tab content destination element id
+                shadowTabs: []
+            });
+            $(document).on("click", ".button-tabs-products", function () {
+                $(".button-tabs-products.active").removeClass('active');
+                $(this).addClass('active');
+            }.bind(this));
+        });
+    });
+</script>
+
+
+
+
